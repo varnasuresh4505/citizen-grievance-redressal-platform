@@ -1,0 +1,12 @@
+const router = require("express").Router();
+const c = require("../controllers/locationController");
+const { protect } = require("../middleware/authMiddleware");
+const authorize = require("../middleware/roleMiddleware");
+router.get("/wards", c.getWards);
+router.get("/wards/:wardNumber", c.getWard);
+router.get("/wards/:wardNumber/areas", c.getAreas);
+router.get("/wards/:wardNumber/areas/:areaId/streets", c.getStreets);
+router.post("/wards", protect, authorize("admin"), c.upsertWard);
+router.put("/wards/:wardNumber", protect, authorize("admin"), c.upsertWard);
+router.delete("/wards/:wardNumber", protect, authorize("admin"), c.deleteWard);
+module.exports = router;

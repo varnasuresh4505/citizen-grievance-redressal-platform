@@ -4,6 +4,8 @@ const {
   createGrievance,
   getMyGrievances,
   getGrievanceById,
+  submitFeedback,
+  requestReopen,
 } = require("../controllers/grievanceController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -16,14 +18,24 @@ const router = express.Router();
 // POST /api/grievances
 // ======================================================
 
-router.post("/", protect, authorize("citizen"), createGrievance);
+router.post(
+  "/",
+  protect,
+  authorize("citizen"),
+  createGrievance
+);
 
 // ======================================================
 // GET MY GRIEVANCES
 // GET /api/grievances/my
 // ======================================================
 
-router.get("/my", protect, authorize("citizen"), getMyGrievances);
+router.get(
+  "/my",
+  protect,
+  authorize("citizen"),
+  getMyGrievances
+);
 
 // ======================================================
 // GET SINGLE GRIEVANCE
@@ -35,6 +47,30 @@ router.get(
   protect,
   authorize("citizen"),
   getGrievanceById
+);
+
+// ======================================================
+// SUBMIT CITIZEN FEEDBACK
+// POST /api/grievances/:id/feedback
+// ======================================================
+
+router.post(
+  "/:id/feedback",
+  protect,
+  authorize("citizen"),
+  submitFeedback
+);
+
+// ======================================================
+// REQUEST REOPEN / APPEAL
+// POST /api/grievances/:id/reopen
+// ======================================================
+
+router.post(
+  "/:id/reopen",
+  protect,
+  authorize("citizen"),
+  requestReopen
 );
 
 module.exports = router;

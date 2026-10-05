@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "seed:wards": "node scripts/seedWards.js",
+    "seed:municipality": "node scripts/seedMunicipality.js"
   },
   "keywords": [],
   "author": "",

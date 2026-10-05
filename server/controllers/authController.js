@@ -3,7 +3,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 // ======================================================
-// REGISTER USER
+// REGISTER CITIZEN
+// Public registration always creates a citizen account
 // ======================================================
 
 const registerUser = async (req, res) => {
@@ -14,43 +15,90 @@ const registerUser = async (req, res) => {
       password,
       phone,
       address,
-      role,
+      gender,
+      differentlyAbled,
     } = req.body;
 
-    // Check required fields
+    // --------------------------------------------------
+    // CHECK REQUIRED FIELDS
+    // --------------------------------------------------
+
     if (!name || !email || !password || !phone) {
       return res.status(400).json({
-        message: "Name, email, password and phone are required",
+        message:
+          "Name, email, password and phone are required",
       });
     }
 
-    // Check whether email already exists
+    // --------------------------------------------------
+    // CHECK EMAIL
+    // --------------------------------------------------
+
+    const normalizedEmail = email
+      .trim()
+      .toLowerCase();
+
     const existingUser = await User.findOne({
-      email: email.toLowerCase(),
+      email: normalizedEmail,
     });
 
     if (existingUser) {
       return res.status(409).json({
-        message: "User with this email already exists",
+        message:
+          "User with this email already exists",
       });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // --------------------------------------------------
+    // HASH PASSWORD
+    // --------------------------------------------------
 
-    // Create user
+    const hashedPassword = await bcrypt.hash(
+      password,
+      10
+    );
+
+    // --------------------------------------------------
+    // CREATE CITIZEN
+    // IMPORTANT:
+    // Role is always citizen for public registration
+    // --------------------------------------------------
+
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
+      name: name.trim(),
+
+      email: normalizedEmail,
+
       password: hashedPassword,
-      phone,
-      address: address || "",
-      role: role || "citizen",
+
+      phone: phone.trim(),
+
+      address: address
+        ? address.trim()
+        : "",
+
+      gender:
+        gender || "prefer_not_to_say",
+
+      differentlyAbled:
+        differentlyAbled === true,
+
+      role: "citizen",
+
+      departmentId: null,
+
+      officerId: null,
+
+      isActive: true,
     });
 
-    // Send response
+    // --------------------------------------------------
+    // RESPONSE
+    // --------------------------------------------------
+
     res.status(201).json({
-      message: "User registered successfully",
+      message:
+        "Citizen registered successfully",
 
       user: {
         id: user._id,
@@ -59,13 +107,20 @@ const registerUser = async (req, res) => {
         phone: user.phone,
         role: user.role,
         address: user.address,
+        gender: user.gender,
+        differentlyAbled:
+          user.differentlyAbled,
       },
     });
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error(
+      "Registration error:",
+      error
+    );
 
     res.status(500).json({
-      message: "Server error during registration",
+      message:
+        "Server error during registration",
     });
   }
 };
@@ -76,45 +131,82 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const {
+      email,
+      identifier: rawIdentifier,
+      phone,
+      password,
+    } = req.body;
 
-    // Check required fields
-    if (!email || !password) {
+    const identifier = (email || rawIdentifier || phone || "").trim();
+
+    // --------------------------------------------------
+    // CHECK REQUIRED FIELDS
+    // --------------------------------------------------
+
+    if (!identifier || !password) {
       return res.status(400).json({
-        message: "Email and password are required",
+        message:
+          "Email or mobile number and password are required",
       });
     }
 
-    // Find user
+    // --------------------------------------------------
+    // FIND USER BY EMAIL OR PHONE
+    // --------------------------------------------------
+
     const user = await User.findOne({
-      email: email.toLowerCase(),
+      $or: [
+        { email: identifier.toLowerCase() },
+        { phone: identifier },
+      ],
     });
 
-    // User not found
     if (!user) {
       return res.status(401).json({
-        message: "Invalid email or password",
+        message:
+          "Invalid credentials (email/mobile or password incorrect)",
       });
     }
 
-    // Compare password
-    const isPasswordCorrect = await bcrypt.compare(
-      password,
-      user.password
-    );
+    // --------------------------------------------------
+    // CHECK ACCOUNT STATUS
+    // --------------------------------------------------
 
-    // Wrong password
+    if (!user.isActive) {
+      return res.status(403).json({
+        message:
+          "Your account has been deactivated",
+      });
+    }
+
+    // --------------------------------------------------
+    // COMPARE PASSWORD
+    // --------------------------------------------------
+
+    const isPasswordCorrect =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
+
     if (!isPasswordCorrect) {
       return res.status(401).json({
-        message: "Invalid email or password",
+        message:
+          "Invalid email or password",
       });
     }
 
-    // Create JWT token
+    // --------------------------------------------------
+    // CREATE JWT
+    // --------------------------------------------------
+
     const token = jwt.sign(
       {
         userId: user._id,
         role: user.role,
+        departmentId:
+          user.departmentId,
       },
       process.env.JWT_SECRET,
       {
@@ -122,9 +214,13 @@ const loginUser = async (req, res) => {
       }
     );
 
-    // Send response
+    // --------------------------------------------------
+    // RESPONSE
+    // --------------------------------------------------
+
     res.status(200).json({
-      message: "Login successful",
+      message:
+        "Login successful",
 
       token,
 
@@ -135,19 +231,30 @@ const loginUser = async (req, res) => {
         phone: user.phone,
         role: user.role,
         address: user.address,
+        gender: user.gender,
+        differentlyAbled:
+          user.differentlyAbled,
+        departmentId:
+          user.departmentId,
+        officerId:
+          user.officerId,
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error(
+      "Login error:",
+      error
+    );
 
     res.status(500).json({
-      message: "Server error during login",
+      message:
+        "Server error during login",
     });
   }
 };
 
 // ======================================================
-// EXPORT FUNCTIONS
+// EXPORT
 // ======================================================
 
 module.exports = {
