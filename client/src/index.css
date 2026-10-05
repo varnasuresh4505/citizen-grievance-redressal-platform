@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+@theme { --font-sans: "Inter", "Segoe UI", system-ui, sans-serif; }
+
+@layer base {
+  body { @apply bg-slate-50 text-slate-700 antialiased; }
+  button { @apply cursor-pointer; }
+  input, select, textarea { @apply transition; }
+}
+
+@layer components {
+  .app-shell { @apply min-h-screen bg-[radial-gradient(circle_at_top_right,_#e0e7ff_0,_transparent_27rem)] bg-slate-50; }
+  .surface { @apply rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-200/60; }
+  .field-label { @apply mb-2 block text-sm font-semibold text-slate-700; }
+  .field { @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-800 outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10; }
+  .primary-btn { @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-700 to-blue-600 px-5 py-3 font-bold text-white shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 hover:shadow-indigo-300 disabled:cursor-not-allowed disabled:opacity-60; }
+  .secondary-btn { @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 font-bold text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700; }
+}
+
+/* A consistent civic-service treatment also lifts the existing role screens. */
+@layer utilities {
+  .bg-gray-100 { background-color: #f8fafc !important; }
+  .bg-white { border-color: #e2e8f0; }
+  .shadow-sm { box-shadow: 0 10px 30px -18px rgb(15 23 42 / .25) !important; }
+  .text-gray-800 { color: #0f172a !important; }
+  .text-gray-700 { color: #334155 !important; }
+  .text-gray-600, .text-gray-500 { color: #64748b !important; }
+  .bg-blue-600 { background-color: #4338ca !important; }
+  .hover\:bg-blue-700:hover { background-color: #3730a3 !important; }
+  .focus\:ring-blue-500:focus { --tw-ring-color: rgb(79 70 229 / .25) !important; }
+  .border-gray-300 { border-color: #cbd5e1 !important; }
+  .rounded-lg { border-radius: .75rem !important; }
+  .rounded-xl { border-radius: 1rem !important; }
+  .rounded-2xl { border-radius: 1.125rem !important; }
+}

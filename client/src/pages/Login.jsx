@@ -1,28 +1,18 @@
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { apiRequest } from "../api";
+import CivicEmblem from "../components/CivicEmblem";
+import { Alert } from "../components/UI";
 
 function Login() {
   const navigate = useNavigate();
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-
     setError("");
     setLoading(true);
 
@@ -32,114 +22,164 @@ function Login() {
         body: JSON.stringify(formData),
       });
 
-      // Save JWT
       localStorage.setItem("token", data.token);
-
-      // Save user information
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      // Redirect based on role
-      if (data.user.role === "citizen") {
-        navigate("/citizen");
-      } else if (data.user.role === "officer") {
-        navigate("/officer");
-      } else if (data.user.role === "admin") {
-        navigate("/admin");
-      }
-    } catch (error) {
-      setError(error.message);
+      navigate(
+        data.user.role === "citizen"
+          ? "/citizen"
+          : data.user.role === "officer"
+          ? "/officer"
+          : data.user.role === "employee"
+          ? "/employee"
+          : data.user.role === "higher_official"
+          ? "/higher-official"
+          : "/admin"
+      );
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const change = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const fillDemo = (identifier) => {
+    setFormData({
+      email: identifier,
+      password: "ChangeMe@123",
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 font-sans">
+      {/* Brand Header */}
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+        <CivicEmblem className="mx-auto h-12 w-12 drop-shadow-xs" />
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Citizen Grievance
-          </h1>
+        <h1 className="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+          Sathyamangalam Municipality
+        </h1>
 
-          <p className="text-gray-500 mt-2">
-            Redressal & Resolution Tracking System
-          </p>
-        </div>
+        <p className="mt-1 text-sm text-slate-500">
+          Citizen Grievance Redressal & Resolution Tracking
+        </p>
+      </div>
 
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">
-          Login
-        </h2>
-
-        {error && (
-          <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-5">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-
-          {/* EMAIL */}
+      {/* Clean Sign-in Card */}
+      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-6 sm:px-8 shadow-xs rounded-2xl border border-slate-200">
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
+            <h2 className="text-lg font-bold text-slate-900">
+              Sign In to Your Account
+            </h2>
 
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              required
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <p className="text-sm text-slate-500 mt-1">
+              Enter your mobile number or email address to continue
+            </p>
           </div>
 
-          {/* PASSWORD */}
+          {error && <Alert type="error">{error}</Alert>}
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+          <form onSubmit={submit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">
+                Mobile Number or Email
+              </label>
 
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-            />
+              <input
+                type="text"
+                name="email"
+                value={formData.email}
+                onChange={change}
+                required
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-700 focus:outline-hidden"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">
+                Password
+              </label>
+
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={change}
+                required
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-700 focus:outline-hidden"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-[#0b2545] py-2.5 text-sm font-bold text-white hover:bg-[#133e6a] transition shadow-xs disabled:opacity-50"
+            >
+              {loading ? "Signing In..." : "Sign In"}
+            </button>
+          </form>
+
+          {/* Quick Demo Logins */}
+          <div className="mt-6 pt-4 border-t border-slate-100">
+            <p className="text-xs font-medium text-slate-400 block mb-2 text-center">
+              Quick Demo Logins (Default password: ChangeMe@123)
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => fillDemo("9842100001")}
+                className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-900 transition"
+              >
+                Citizen
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  fillDemo("electric-officer-1@sathyamangalam.gov.in")
+                }
+                className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-900 transition"
+              >
+                Officer
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  fillDemo("higher.official@sathyamangalam.gov.in")
+                }
+                className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-900 transition"
+              >
+                Higher Official
+              </button>
+            </div>
           </div>
 
-          {/* LOGIN BUTTON */}
+          {/* Registration link */}
+          <div className="mt-5 pt-4 border-t border-slate-100 text-center text-sm text-slate-600">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="font-bold text-blue-900 hover:underline"
+            >
+              Register as Citizen
+            </Link>
+          </div>
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-
-        </form>
-
-        <p className="text-center text-gray-500 text-sm mt-6">
-          Don't have an account?{" "}
-          <button
-            onClick={() => navigate("/register")}
-            className="text-blue-600 font-semibold hover:underline"
-          >
-            Register
-          </button>
+        <p className="mt-6 text-center text-xs text-slate-400">
+          Government of Tamil Nadu • Erode District Administration
         </p>
-
       </div>
     </div>
   );
 }
 
 export default Login;
+
