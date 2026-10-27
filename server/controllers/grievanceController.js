@@ -5,7 +5,7 @@ const Department = require("../models/Department");
 const Location = require("../models/Location");
 const GrievanceHistory = require("../models/GrievanceHistory");
 const { addHistory, notify } = require("../services/workflowService");
-const { analyzeGrievance } = require("../services/aiAnalysisService");
+const { analyzeGrievanceWithAI } = require("../services/aiAnalysisService");
 
 // ======================================================
 // RESOLUTION TIME CONFIGURATION
@@ -26,9 +26,34 @@ const resolutionDays = {
 const generateGrievanceId = async () => {
   const year = new Date().getFullYear();
   const prefix = `GRV-SLM-${year}-`;
-  const latest = await Grievance.findOne({ grievanceId: new RegExp(`^${prefix}`) }).sort({ grievanceId: -1 }).select("grievanceId").lean();
-  const sequence = latest ? Number.parseInt(latest.grievanceId.slice(prefix.length), 10) + 1 : 1;
-  return `${prefix}${String(sequence).padStart(5, "0")}`;
+  
+  // Find all grievances matching the current year prefix
+  const existing = await Grievance.find({ grievanceId: new RegExp(`^${prefix}\\d+$`) })
+    .select("grievanceId")
+    .lean();
+
+  let maxSeq = 0;
+  for (const item of existing) {
+    if (item.grievanceId && item.grievanceId.startsWith(prefix)) {
+      const seqStr = item.grievanceId.slice(prefix.length);
+      const seqNum = Number.parseInt(seqStr, 10);
+      // Exclude artificial test sequences (>= 90000) from jumping regular citizen docket IDs
+      if (!Number.isNaN(seqNum) && seqNum < 90000 && seqNum > maxSeq) {
+        maxSeq = seqNum;
+      }
+    }
+  }
+
+  let nextSeq = maxSeq + 1;
+  let candidateId = `${prefix}${String(nextSeq).padStart(5, "0")}`;
+
+  // Guaranteed uniqueness: increment if candidate already exists
+  while (await Grievance.exists({ grievanceId: candidateId })) {
+    nextSeq++;
+    candidateId = `${prefix}${String(nextSeq).padStart(5, "0")}`;
+  }
+
+  return candidateId;
 };
 
 // ======================================================
@@ -83,22 +108,6 @@ const createGrievance = async (req, res) => {
     const wardName = verifiedWard ? verifiedWard.wardName : `Ward ${parsedWardNumber}`;
 
     // --------------------------------------------------
-    // PRIORITY & RESOLUTION TIME
-    // Low: 15d, Medium: 10d, High: 7d, Critical: 3d
-    // --------------------------------------------------
-
-    const selectedPriority = priority || "Medium";
-    if (!resolutionDays[selectedPriority]) {
-      return res.status(400).json({
-        message: "Invalid priority. Choose Low, Medium, High, or Critical.",
-      });
-    }
-
-    const allowedDays = resolutionDays[selectedPriority];
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + allowedDays);
-
-    // --------------------------------------------------
     // DEPARTMENT IDENTIFICATION & AUTO-ASSIGNMENT
     // --------------------------------------------------
 
@@ -141,15 +150,41 @@ const createGrievance = async (req, res) => {
     }
 
     // --------------------------------------------------
-    // AI ADVISORY ANALYSIS
+    // AI ADVISORY ANALYSIS & AUTOMATED PRIORITY DETECTION
+    // Note: Citizen-supplied priority is ignored for integrity.
     // --------------------------------------------------
 
     let aiAnalysis;
     try {
-      aiAnalysis = analyzeGrievance(`${title} ${description}`);
+      aiAnalysis = await analyzeGrievanceWithAI({
+        title,
+        description,
+        category: departmentDoc ? departmentDoc.name : category,
+        location: {
+          wardNumber: parsedWardNumber,
+          wardName,
+          village,
+          landmark,
+          address,
+        },
+      });
     } catch (_) {
-      aiAnalysis = { processingStatus: "failed" };
+      aiAnalysis = {
+        priority: "Medium",
+        summary: "Automated AI briefing summary unavailable. Please review original citizen complaint.",
+        processingStatus: "failed",
+        confidence: 0,
+      };
     }
+
+    // Assign priority from AI classification (safe fallback: Medium)
+    const detectedPriority = aiAnalysis.priority && resolutionDays[aiAnalysis.priority]
+      ? aiAnalysis.priority
+      : "Medium";
+
+    const allowedDays = resolutionDays[detectedPriority] || 10;
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + allowedDays);
 
     const grievance = await Grievance.create({
       citizen: req.user.userId,
@@ -166,14 +201,21 @@ const createGrievance = async (req, res) => {
         address: (address || landmark).trim(),
         landmark: landmark ? landmark.trim() : "",
       },
-      priority: selectedPriority,
+      priority: detectedPriority,
       department: departmentDoc ? departmentDoc._id : null,
       assignedOfficer: assignedOfficerId,
       status: assignedOfficerId ? "Assigned" : "Submitted",
       allowedResolutionDays: allowedDays,
       dueDate,
       evidence: Array.isArray(evidence) ? evidence : [],
-      aiAnalysis,
+      aiAnalysis: {
+        category: departmentDoc ? departmentDoc.name : (category || ""),
+        severity: detectedPriority,
+        confidence: aiAnalysis.confidence || 0,
+        keywords: aiAnalysis.keywords || [],
+        summary: aiAnalysis.summary || "",
+        processingStatus: aiAnalysis.processingStatus || "unconfigured",
+      },
     });
 
     await grievance.populate("department", "name code description");

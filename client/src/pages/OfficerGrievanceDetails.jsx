@@ -23,6 +23,8 @@ import {
   Phone,
   Mail,
   AlertOctagon,
+  Sparkles,
+  Star,
 } from "lucide-react";
 
 export default function OfficerGrievanceDetails() {
@@ -38,6 +40,7 @@ export default function OfficerGrievanceDetails() {
   const [status, setStatus] = useState("");
   const [resolution, setResolution] = useState("");
   const [onHoldReason, setOnHoldReason] = useState("");
+  const [isEditingResolution, setIsEditingResolution] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -113,6 +116,9 @@ export default function OfficerGrievanceDetails() {
 
       setGrievance(data.grievance);
       setStatus(data.grievance.status || status);
+      if (["Resolved", "Closed"].includes(data.grievance.status || status)) {
+        setIsEditingResolution(false);
+      }
       setSuccess("Official case status and resolution record updated successfully.");
     } catch (error) {
       setError(error.message);
@@ -309,14 +315,32 @@ export default function OfficerGrievanceDetails() {
                 <PriorityBadge priority={grievance.priority} />
               </div>
 
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Citizen Complaint Description
-                </h3>
-                <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200 whitespace-pre-wrap">
-                  {grievance.description}
+              {/* AI-GENERATED OFFICER BRIEFING SUMMARY */}
+              <div className="mb-4 rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50/70 via-white to-indigo-50/40 p-4 shadow-2xs">
+                <div className="flex items-center justify-between border-b border-indigo-100 pb-2 mb-2.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-indigo-600" />
+                    <span>AI-Generated Summary — Officer Briefing</span>
+                  </span>
+                  <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                    grievance.aiAnalysis?.processingStatus === "completed"
+                      ? "bg-indigo-100 text-indigo-800 border border-indigo-200"
+                      : "bg-slate-100 text-slate-600 border border-slate-200"
+                  }`}>
+                    {grievance.aiAnalysis?.processingStatus === "completed" ? "Automated AI Triage" : "Advisory Status"}
+                  </span>
+                </div>
+                <p className="text-xs text-indigo-950 leading-relaxed font-medium">
+                  {grievance.aiAnalysis?.summary || "Automated AI briefing summary unavailable. Please review original citizen complaint below."}
+                </p>
+                <p className="mt-2 text-[10px] text-indigo-700/80 italic flex items-center gap-1">
+                  <Info className="h-3 w-3 shrink-0" />
+                  <span>AI-generated rapid triage briefing. Compare with unaltered citizen complaint.</span>
                 </p>
               </div>
+
+              {/* CITIZEN COMPLAINT DESCRIPTION (UNALTERED ORIGINAL) */}
+              
 
               {/* Evidence */}
               {grievance.evidence && grievance.evidence.length > 0 && (
@@ -342,8 +366,8 @@ export default function OfficerGrievanceDetails() {
             </div>
 
             {/* FIELD WORK DEPLOYMENT */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+            {/* <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs"> */}
+              {/* <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
                 <div>
                   <span className="text-[11px] font-bold uppercase tracking-wider text-blue-800">
                     Field Execution
@@ -355,9 +379,9 @@ export default function OfficerGrievanceDetails() {
                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
                   {tasks.length} Task{tasks.length === 1 ? "" : "s"} Assigned
                 </span>
-              </div>
+              </div> */}
 
-              {employees.length === 0 ? (
+              {/* {employees.length === 0 ? (
                 <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
                   No field staff employees currently registered under your department.
                 </p>
@@ -433,9 +457,9 @@ export default function OfficerGrievanceDetails() {
                       : `Assign to ${selectedEmployees.length || "Selected"} Employee${selectedEmployees.length === 1 ? "" : "s"}`}
                   </button>
                 </form>
-              )}
+              )} */}
 
-              {/* Existing Tasks List */}
+              {/* Existing Tasks List
               {tasks.length > 0 && (
                 <div className="mt-5 border-t border-slate-200 pt-4">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
@@ -458,86 +482,152 @@ export default function OfficerGrievanceDetails() {
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
+              )} */}
+            {/* </div> */}
 
-            {/* STATUS UPDATE & RESOLUTION FORM */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-              <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-4 border-b border-slate-200 pb-3">
-                Update Status & Record Resolution
-              </h3>
+            {/* STATUS UPDATE & RESOLUTION SECTION */}
+            {isResolved && !isEditingResolution ? (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-200 pb-3 mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-700 shrink-0" />
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-emerald-950">
+                        Official Resolution Certified & Closed
+                      </h3>
+                      <p className="text-[11px] text-emerald-800">
+                        {grievance.resolvedAt
+                          ? `Certified resolved on ${formatDate(grievance.resolvedAt)}`
+                          : "Official resolution recorded in municipal registry"}
+                      </p>
+                    </div>
+                  </div>
 
-              <form onSubmit={handleUpdate} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    Official Processing Status <span className="text-rose-600">*</span>
-                  </label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold text-slate-900 bg-white"
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingResolution(true)}
+                    className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-900 hover:bg-emerald-100 transition shadow-2xs"
                   >
-                    <option value="Assigned">Assigned (Initial Review)</option>
-                    <option value="In Progress">In Progress (Field Work Underway)</option>
-                    <option value="On Hold">On Hold (Mandatory Justification Required)</option>
-                    <option value="Resolved">Resolved (Closure Summary Required)</option>
-                  </select>
+                    Amend Resolution Note
+                  </button>
                 </div>
 
-                {/* ON HOLD REASON MANDATORY INPUT */}
-                {status === "On Hold" && (
-                  <div className="rounded-xl bg-amber-50 border border-amber-300 p-4">
-                    <label className="block text-xs font-bold text-amber-950 mb-1">
-                      Official Reason for Placing On Hold <span className="text-rose-600">*</span>
-                    </label>
-                    <textarea
-                      value={onHoldReason}
-                      onChange={(e) => setOnHoldReason(e.target.value)}
-                      rows="3"
-                      placeholder="Specify the technical delay, required permits, or missing materials..."
-                      required
-                      className="w-full rounded-lg border border-amber-300 p-2.5 text-xs text-slate-900 bg-white focus:outline-hidden"
-                    />
-                    <p className="mt-1 text-[11px] text-amber-800">
-                      This justification is legally bound to the citizen's tracking portal and executive audits.
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-900 block mb-1">
+                      Certified Resolution Statement:
+                    </span>
+                    <p className="rounded-xl border border-emerald-200 bg-white p-4 text-xs font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">
+                      {grievance.resolution || resolution}
                     </p>
                   </div>
-                )}
 
-                {/* RESOLUTION MESSAGE INPUT */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Resolution Note {status === "Resolved" && <span className="text-rose-600">*</span>}
-                  </label>
-                  <textarea
-                    value={resolution}
-                    onChange={(e) => setResolution(e.target.value)}
-                    rows="3"
-                    placeholder={
-                      status === "Resolved"
-                        ? "Detail how the grievance was resolved, work completed, and verification performed..."
-                        : "Optional progress notes or milestone remarks..."
-                    }
-                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-hidden"
-                  />
-                  {status === "Resolved" && (
-                    <p className="mt-1 text-[11px] text-rose-700 font-semibold">
-                      A clear resolution statement is required to certify closure.
-                    </p>
+                  {grievance.onHoldReason && (
+                    <div className="pt-2 border-t border-emerald-200/60 text-xs text-slate-600">
+                      <span className="font-semibold text-slate-700">Prior On-Hold Justification: </span>
+                      <span>{grievance.onHoldReason}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                    {isResolved ? "Amend Official Resolution Note" : "Update Status & Record Resolution"}
+                  </h3>
+                  {isResolved && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingResolution(false)}
+                      className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
+                    >
+                      Cancel
+                    </button>
                   )}
                 </div>
 
-                <div className="flex justify-end pt-2">
-                  <button
-                    type="submit"
-                    disabled={updating}
-                    className="rounded-xl bg-[#0b2545] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#133e6a] transition shadow-xs disabled:opacity-50"
-                  >
-                    {updating ? "Recording Update..." : "Update Official Record"}
-                  </button>
-                </div>
-              </form>
-            </div>
+                <form onSubmit={handleUpdate} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Official Processing Status <span className="text-rose-600">*</span>
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold text-slate-900 bg-white"
+                    >
+                      <option value="Assigned">Assigned (Initial Review)</option>
+                      <option value="In Progress">In Progress (Field Work Underway)</option>
+                      <option value="On Hold">On Hold (Mandatory Justification Required)</option>
+                      <option value="Resolved">Resolved (Closure Summary Required)</option>
+                    </select>
+                  </div>
+
+                  {/* ON HOLD REASON MANDATORY INPUT */}
+                  {status === "On Hold" && (
+                    <div className="rounded-xl bg-amber-50 border border-amber-300 p-4">
+                      <label className="block text-xs font-bold text-amber-950 mb-1">
+                        Official Reason for Placing On Hold <span className="text-rose-600">*</span>
+                      </label>
+                      <textarea
+                        value={onHoldReason}
+                        onChange={(e) => setOnHoldReason(e.target.value)}
+                        rows="3"
+                        placeholder="Specify the technical delay, required permits, or missing materials..."
+                        required
+                        className="w-full rounded-lg border border-amber-300 p-2.5 text-xs text-slate-900 bg-white focus:outline-hidden"
+                      />
+                      <p className="mt-1 text-[11px] text-amber-800">
+                        This justification is legally bound to the citizen's tracking portal and executive audits.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* RESOLUTION MESSAGE INPUT */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Resolution Note {status === "Resolved" && <span className="text-rose-600">*</span>}
+                    </label>
+                    <textarea
+                      value={resolution}
+                      onChange={(e) => setResolution(e.target.value)}
+                      rows="3"
+                      placeholder={
+                        status === "Resolved"
+                          ? "Detail how the grievance was resolved, work completed, and verification performed..."
+                          : "Optional progress notes or milestone remarks..."
+                      }
+                      className="w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-hidden"
+                    />
+                    {status === "Resolved" && (
+                      <p className="mt-1 text-[11px] text-rose-700 font-semibold">
+                        A clear resolution statement is required to certify closure.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    {isResolved && (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingResolution(false)}
+                        className="rounded-xl border border-slate-300 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={updating}
+                      className="rounded-xl bg-[#0b2545] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#133e6a] transition shadow-xs disabled:opacity-50"
+                    >
+                      {updating ? "Recording Update..." : isResolved ? "Save Amended Resolution" : "Update Official Record"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
 
           {/* RIGHT COLUMN: CITIZEN & JURISDICTION SUMMARY */}
@@ -607,6 +697,55 @@ export default function OfficerGrievanceDetails() {
                 </span>
               </div>
             </div>
+
+            {/* Citizen Feedback Record */}
+            {grievance.feedback?.rating && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-xs text-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-amber-200 pb-2">
+                  <p className="font-bold text-amber-950 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                    <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                    <span>Citizen Resolution Feedback</span>
+                  </p>
+                  <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200">
+                    {grievance.feedback.rating}/5 Stars
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-4 w-4 ${
+                        star <= grievance.feedback.rating
+                          ? "text-amber-500 fill-amber-500"
+                          : "text-amber-200"
+                      }`}
+                    />
+                  ))}
+                  <span className="ml-1.5 text-xs font-bold text-amber-950">
+                    {grievance.feedback.rating === 5 && "Very Satisfied"}
+                    {grievance.feedback.rating === 4 && "Satisfied"}
+                    {grievance.feedback.rating === 3 && "Neutral"}
+                    {grievance.feedback.rating === 2 && "Unsatisfied"}
+                    {grievance.feedback.rating === 1 && "Very Unsatisfied"}
+                  </span>
+                </div>
+
+                {grievance.feedback.comment ? (
+                  <p className="bg-white/90 p-3 rounded-xl border border-amber-200 text-slate-800 leading-relaxed italic">
+                    "{grievance.feedback.comment}"
+                  </p>
+                ) : (
+                  <p className="text-slate-500 italic">No written citizen remarks entered.</p>
+                )}
+
+                {grievance.feedback.submittedAt && (
+                  <p className="text-[10px] text-amber-800 font-medium pt-1 border-t border-amber-200/60">
+                    Submitted on: {formatDate(grievance.feedback.submittedAt)}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>

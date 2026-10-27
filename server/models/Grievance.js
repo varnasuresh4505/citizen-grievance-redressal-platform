@@ -128,7 +128,7 @@ const grievanceSchema = new mongoose.Schema(
       subcategory: { type: String, default: "", trim: true },
       recommendedDepartment: { type: mongoose.Schema.Types.ObjectId, ref: "Department", default: null },
       summary: { type: String, default: "", trim: true },
-      processingStatus: { type: String, enum: ["pending", "completed", "failed", "not_requested"], default: "not_requested" },
+      processingStatus: { type: String, enum: ["pending", "completed", "failed", "unconfigured", "fallback", "not_requested"], default: "not_requested" },
     },
 
     // ======================================================

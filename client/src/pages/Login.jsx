@@ -142,7 +142,7 @@ function Login() {
               <button
                 type="button"
                 onClick={() =>
-                  fillDemo("electric-officer-1@sathyamangalam.gov.in")
+                  fillDemo("roads-officer-1@sathyamangalam.gov.in")
                 }
                 className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-900 transition"
               >
@@ -174,7 +174,7 @@ function Login() {
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-400">
-          Government of Tamil Nadu • Erode District Administration
+          CivicResolve • Citizen Support Platform
         </p>
       </div>
     </div>

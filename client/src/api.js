@@ -1,4 +1,7 @@
-const API_URL = "http://localhost:5000/api";
+const rawEnvUrl = import.meta.env.VITE_API_URL;
+const API_URL = rawEnvUrl
+  ? (rawEnvUrl.replace(/\/+$/, "").endsWith("/api") ? rawEnvUrl.replace(/\/+$/, "") : `${rawEnvUrl.replace(/\/+$/, "")}/api`)
+  : "http://localhost:5000/api";
 
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem("token");

@@ -20,6 +20,7 @@ import {
   ArrowRight,
   ShieldCheck,
   History,
+  Star,
 } from "lucide-react";
 
 export default function GrievanceDetails() {
@@ -31,6 +32,14 @@ export default function GrievanceDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Feedback state
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackHover, setFeedbackHover] = useState(0);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
+  const [feedbackSuccess, setFeedbackSuccess] = useState("");
+
   // Escalation modal state
   const [showEscalateModal, setShowEscalateModal] = useState(false);
   const [escalationReason, setEscalationReason] = useState("");
@@ -38,6 +47,45 @@ export default function GrievanceDetails() {
   const [submittingEscalation, setSubmittingEscalation] = useState(false);
   const [escalationSuccess, setEscalationSuccess] = useState("");
   const [escalationError, setEscalationError] = useState("");
+
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    setFeedbackError("");
+    setFeedbackSuccess("");
+
+    if (!feedbackRating || feedbackRating < 1 || feedbackRating > 5) {
+      setFeedbackError("Please select a rating between 1 and 5 stars.");
+      return;
+    }
+
+    try {
+      setSubmittingFeedback(true);
+      const res = await apiRequest("/feedback", {
+        method: "POST",
+        body: JSON.stringify({
+          grievanceId: grievance._id,
+          rating: Number(feedbackRating),
+          comment: feedbackComment.trim(),
+        }),
+      });
+
+      setFeedbackSuccess("Thank you! Your feedback has been recorded.");
+      setGrievance((prev) => ({
+        ...prev,
+        feedback: res.grievanceFeedback || {
+          rating: Number(feedbackRating),
+          comment: feedbackComment.trim(),
+          submittedAt: new Date(),
+        },
+      }));
+      // Refresh grievance audit history
+      fetchGrievance();
+    } catch (err) {
+      setFeedbackError(err.message);
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
 
   const fetchGrievance = async () => {
     try {
@@ -313,6 +361,139 @@ export default function GrievanceDetails() {
                   <p className="text-[11px] text-emerald-800 font-semibold mt-2.5 pt-2 border-t border-emerald-200">
                     Certified Closed on {formatDate(grievance.resolvedAt)}
                   </p>
+                )}
+              </div>
+            )}
+
+            {/* CITIZEN FEEDBACK SECTION (Visible on Resolved / Closed grievances) */}
+            {isResolved && (
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
+                {grievance.feedback?.rating ? (
+                  // Display Submitted Feedback
+                  <div>
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                          Your Redressal Feedback
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-semibold text-slate-500">
+                        Submitted: {formatDate(grievance.feedback.submittedAt)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-5 w-5 ${
+                              star <= grievance.feedback.rating
+                                ? "text-amber-400 fill-amber-400"
+                                : "text-slate-200"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs font-bold text-slate-900">
+                        {grievance.feedback.rating} out of 5 Stars
+                      </span>
+                    </div>
+
+                    {grievance.feedback.comment ? (
+                      <p className="mt-2 text-xs text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200 leading-relaxed italic">
+                        "{grievance.feedback.comment}"
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No additional comments provided.</p>
+                    )}
+                  </div>
+                ) : (
+                  // Interactive Feedback Submission Form
+                  <div>
+                    <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5 mb-3">
+                      <Star className="h-4 w-4 text-amber-500" />
+                      <div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-900 block">
+                          Citizen Redressal Feedback
+                        </span>
+                        <span className="text-[11px] text-slate-500">
+                          Please rate the resolution provided by the municipal department
+                        </span>
+                      </div>
+                    </div>
+
+                    {feedbackError && (
+                      <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 p-2.5 text-xs text-rose-800 font-semibold">
+                        {feedbackError}
+                      </div>
+                    )}
+                    {feedbackSuccess && (
+                      <div className="mb-3 rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-xs text-emerald-800 font-semibold">
+                        {feedbackSuccess}
+                      </div>
+                    )}
+
+                    <form onSubmit={handleFeedbackSubmit} className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Satisfaction Rating <span className="text-rose-600">*</span>
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <div className="flex gap-1.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                type="button"
+                                key={star}
+                                onClick={() => setFeedbackRating(star)}
+                                onMouseEnter={() => setFeedbackHover(star)}
+                                onMouseLeave={() => setFeedbackHover(0)}
+                                className="p-1 text-slate-300 transition hover:scale-110 focus:outline-hidden"
+                              >
+                                <Star
+                                  className={`h-6 w-6 ${
+                                    star <= (feedbackHover || feedbackRating)
+                                      ? "text-amber-400 fill-amber-400"
+                                      : "text-slate-300"
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                          <span className="text-xs font-bold text-slate-700">
+                            {feedbackRating === 5 && "5 - Very Satisfied"}
+                            {feedbackRating === 4 && "4 - Satisfied"}
+                            {feedbackRating === 3 && "3 - Neutral"}
+                            {feedbackRating === 2 && "2 - Unsatisfied"}
+                            {feedbackRating === 1 && "1 - Very Unsatisfied"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Your Comments or Suggestions (Optional)
+                        </label>
+                        <textarea
+                          value={feedbackComment}
+                          onChange={(e) => setFeedbackComment(e.target.value)}
+                          maxLength={1000}
+                          rows="2"
+                          placeholder="Tell us about your experience with the officer's resolution..."
+                          className="w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 focus:outline-hidden"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={submittingFeedback}
+                        className="rounded-xl bg-[#0b2545] px-4 py-2 text-xs font-bold text-white hover:bg-[#133e6a] transition shadow-xs disabled:opacity-50"
+                      >
+                        {submittingFeedback ? "Submitting Feedback..." : "Submit Official Feedback"}
+                      </button>
+                    </form>
+                  </div>
                 )}
               </div>
             )}

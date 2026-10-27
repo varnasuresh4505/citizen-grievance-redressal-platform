@@ -96,15 +96,15 @@ export default function CivicHeader({
       <div className="bg-[#0b1f3a] text-slate-200 text-[14px] py-2 font-medium border-b border-[#133056]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-400"></span>
-            <span className="font-semibold text-white tracking-wide">
-              தமிழ்நாடு அரசு • Government of Tamil Nadu
-            </span>
-            <span className="hidden md:inline text-slate-400">•</span>
-            <span className="hidden md:inline text-slate-300">
-              Erode District Administration
-            </span>
-          </div>
+  <span className="flex h-2 w-2 rounded-full bg-emerald-400"></span>
+  <span className="font-semibold text-white tracking-wide">
+    CivicResolve • Citizen Support Platform
+  </span>
+  <span className="hidden md:inline text-slate-400">•</span>
+  <span className="hidden md:inline text-slate-300">
+    Sathyamangalam Community
+  </span>
+</div>
 
           <div className="flex items-center gap-4 text-slate-300">
             <div className="hidden sm:flex items-center gap-3">

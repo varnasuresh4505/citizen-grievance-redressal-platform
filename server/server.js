@@ -23,9 +23,32 @@ const app = express();
 // MIDDLEWARE
 // ======================================================
 
-app.use(cors({
-  origin: "http://localhost:5173",
-}));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (e.g. curl, health checks, server-to-server)
+      if (!origin) return callback(null, true);
+
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app") ||
+        process.env.NODE_ENV !== "production"
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 
 // Evidence images are stored as data URLs by the current academic-project setup.
 // This accommodates up to three 2 MB images plus the rest of a grievance payload.
@@ -49,30 +72,55 @@ app.use("/api/higher-official", higherOfficialRoutes);
 app.use("/api/feedback", feedbackRoutes);
 
 // ======================================================
-// BASIC TEST ROUTE
+// HEALTH CHECK & BASIC TEST ROUTES
 // ======================================================
 
 app.get("/", (req, res) => {
   res.json({
     message: "Citizen Grievance Redressal API is running",
+    service: "civicresolve-api",
+    status: "active",
+  });
+});
+
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
   });
 });
 
 // ======================================================
-// DATABASE CONNECTION
+// PORT BINDING & DATABASE CONNECTION
 // ======================================================
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB connected successfully");
+const PORT = process.env.PORT || 5000;
 
-    app.listen(process.env.PORT, () => {
-      console.log(`Server running on port ${process.env.PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+if (!process.env.MONGO_URI) {
+  console.error("WARNING: MONGO_URI is not set in environment variables!");
+} else {
+  mongoose
+    .connect(process.env.MONGO_URI)
+    .then(() => {
+      console.log("MongoDB connected successfully");
+      checkOverdueGrievances().catch((error) =>
+        console.error("Initial overdue check failed:", error.message)
+      );
+      setInterval(
+        () =>
+          checkOverdueGrievances().catch((error) =>
+            console.error("Overdue check failed:", error.message)
+          ),
+        60 * 60 * 1000
+      );
+    })
+    .catch((error) => {
+      console.error("MongoDB connection failed:", error.message);
     });
-    checkOverdueGrievances().catch((error) => console.error("Initial overdue check failed:", error.message));
-    setInterval(() => checkOverdueGrievances().catch((error) => console.error("Overdue check failed:", error.message)), 60 * 60 * 1000);
-  })
-  .catch((error) => {
-    console.error("MongoDB connection failed:", error.message);
-  });
+}
