@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node server.js",
     "seed:wards": "node scripts/seedWards.js",
-    "seed:municipality": "node scripts/seedMunicipality.js"
+    "seed:municipality": "node scripts/seedMunicipality.js",
+    "seed:production": "node scripts/seedProduction.js"
   },
   "keywords": [],
   "author": "",
