@@ -189,7 +189,7 @@ export default function CivicHeader({
                   <p className="text-xs font-bold text-slate-900 truncate leading-tight">
                     {user?.name || "Official Account"}
                   </p>
-                  <p className="text-[10px] font-semibold text-slate-500 truncate leading-tight">
+                  {/* <p className="text-[10px] font-semibold text-slate-500 truncate leading-tight">
                     {role === "higher_official"
                       ? "Higher Official"
                       : role === "officer"
@@ -197,7 +197,7 @@ export default function CivicHeader({
                       : role === "admin"
                       ? "Administrator"
                       : "Verified Citizen"}
-                  </p>
+                  </p> */}
                 </div>
                 <ChevronDown
                   className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${

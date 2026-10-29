@@ -189,12 +189,7 @@ function CitizenDashboard() {
                     </span>
                   </span>
 
-                  <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-[13px] font-bold text-emerald-800 ring-1 ring-inset ring-emerald-700/20">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-700" />
-                    <span>
-                      Tamil Nadu Right to Service Standard
-                    </span>
-                  </span>
+                  
                 </div>
 
                 <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 leading-snug">

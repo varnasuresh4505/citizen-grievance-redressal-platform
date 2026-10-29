@@ -7,8 +7,6 @@ import SubmitGrievance from "./pages/SubmitGrievance";
 import GrievanceDetails from "./pages/GrievanceDetails";
 import OfficerDashboard from "./pages/OfficerDashboard";
 import OfficerGrievanceDetails from "./pages/OfficerGrievanceDetails";
-import EmployeeDashboard from "./pages/EmployeeDashboard";
-import EmployeeTaskDetails from "./pages/EmployeeTaskDetails";
 import HigherOfficialDashboard from "./pages/HigherOfficialDashboard";
 import Escalations from "./pages/Escalations";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -49,9 +47,6 @@ function App() {
         <Route path="/officer" element={<OfficerDashboard />} />
         <Route path="/officer/grievance/:id" element={<OfficerGrievanceDetails />} />
 
-        {/* Employee */}
-        <Route path="/employee" element={<EmployeeDashboard />} />
-        <Route path="/employee/tasks/:id" element={<EmployeeTaskDetails />} />
 
         {/* Higher official */}
         <Route path="/higher-official" element={<HigherOfficialDashboard />} />
